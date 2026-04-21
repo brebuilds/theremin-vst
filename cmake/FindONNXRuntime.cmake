@@ -1,0 +1,27 @@
+# Finds ONNX Runtime given ONNXRUNTIME_ROOT.
+if(NOT ONNXRUNTIME_ROOT)
+    message(FATAL_ERROR "ONNXRUNTIME_ROOT not set")
+endif()
+
+find_path(ONNXRUNTIME_INCLUDE_DIR
+    NAMES onnxruntime_cxx_api.h
+    PATHS "${ONNXRUNTIME_ROOT}/include"
+    NO_DEFAULT_PATH
+)
+
+find_library(ONNXRUNTIME_LIB
+    NAMES onnxruntime onnxruntime.lib
+    PATHS "${ONNXRUNTIME_ROOT}/lib"
+    NO_DEFAULT_PATH
+)
+
+if(NOT ONNXRUNTIME_INCLUDE_DIR OR NOT ONNXRUNTIME_LIB)
+    message(FATAL_ERROR "ONNX Runtime not found in ${ONNXRUNTIME_ROOT}")
+endif()
+
+add_library(onnxruntime SHARED IMPORTED GLOBAL)
+set_target_properties(onnxruntime PROPERTIES
+    IMPORTED_LOCATION "${ONNXRUNTIME_LIB}"
+    IMPORTED_IMPLIB "${ONNXRUNTIME_LIB}"
+    INTERFACE_INCLUDE_DIRECTORIES "${ONNXRUNTIME_INCLUDE_DIR}"
+)

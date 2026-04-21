@@ -20,17 +20,51 @@ jobs:
       - name: Install CMake
         uses: lukka/get-cmake@latest
 
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: "2024.02.14"
+
+      - name: Install OpenCV via vcpkg
+        shell: pwsh
+        run: |
+          & "$env:VCPKG_ROOT/vcpkg" install opencv4:x64-windows
+
+      - name: Download ONNX Runtime
+        shell: pwsh
+        run: |
+          $ortVersion = "1.17.3"
+          $url = "https://github.com/microsoft/onnxruntime/releases/download/v$ortVersion/onnxruntime-win-x64-$ortVersion.zip"
+          Invoke-WebRequest -Uri $url -OutFile ort.zip
+          New-Item -ItemType Directory -Force -Path vendor/onnxruntime-staging | Out-Null
+          Expand-Archive ort.zip -DestinationPath vendor/onnxruntime-staging -Force
+          Rename-Item "vendor/onnxruntime-staging/onnxruntime-win-x64-$ortVersion" "onnxruntime"
+          Move-Item "vendor/onnxruntime-staging/onnxruntime" "vendor/onnxruntime"
+          Remove-Item -Recurse "vendor/onnxruntime-staging"
+
       - name: Configure
-        run: cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+        shell: pwsh
+        run: |
+          cmake -B build -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
+            -DONNXRUNTIME_ROOT="$env:GITHUB_WORKSPACE/vendor/onnxruntime"
 
       - name: Build plugin
         run: cmake --build build --config Release --target Theremin_VST3 --parallel
 
-      - name: Collect VST3 artifact
+      - name: Collect VST3 + runtime DLLs
         shell: pwsh
         run: |
           $vst3 = Get-ChildItem -Path build/Theremin_artefacts/Release/VST3 -Filter "Theremin.vst3" -Directory | Select-Object -First 1
           if (-not $vst3) { throw "VST3 not produced" }
+
+          # Copy onnxruntime.dll + OpenCV DLLs next to the plugin binary.
+          $binDir = Join-Path $vst3.FullName "Contents/x86_64-win"
+          Copy-Item "vendor/onnxruntime/lib/onnxruntime.dll" -Destination $binDir
+          Get-ChildItem -Path "$env:VCPKG_ROOT/installed/x64-windows/bin" -Filter "opencv_*.dll" |
+              ForEach-Object { Copy-Item $_.FullName -Destination $binDir }
+
           Compress-Archive -Path $vst3.FullName -DestinationPath Theremin-vst3-windows.zip
 
       - name: Upload artifact

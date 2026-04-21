@@ -10,6 +10,11 @@ if(APPLE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "")
 endif()
 
+# External deps: OpenCV (vcpkg on Windows, Homebrew on macOS) + ONNX Runtime (zip)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+find_package(OpenCV REQUIRED COMPONENTS core imgproc videoio dnn)
+find_package(ONNXRuntime REQUIRED)
+
 # JUCE as subdirectory (vendored submodule)
 add_subdirectory(vendor/JUCE)
 
@@ -50,6 +55,7 @@ target_sources(Theremin PRIVATE
 )
 
 target_include_directories(Theremin PRIVATE src)
+target_include_directories(Theremin PRIVATE ${OpenCV_INCLUDE_DIRS})
 
 target_compile_definitions(Theremin PRIVATE
     JUCE_WEB_BROWSER=0
@@ -68,6 +74,8 @@ target_link_libraries(Theremin PRIVATE
     juce::juce_graphics
     juce::juce_gui_basics
     juce::juce_gui_extra
+    ${OpenCV_LIBS}
+    onnxruntime
     PRIVATE
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
