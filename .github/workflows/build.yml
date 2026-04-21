@@ -1,0 +1,48 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install CMake
+        uses: lukka/get-cmake@latest
+
+      - name: Configure
+        run: cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build plugin
+        run: cmake --build build --config Release --target Theremin_VST3 --parallel
+
+      - name: Collect VST3 artifact
+        shell: pwsh
+        run: |
+          $vst3 = Get-ChildItem -Path build/Theremin_artefacts/Release/VST3 -Filter "Theremin.vst3" -Directory | Select-Object -First 1
+          if (-not $vst3) { throw "VST3 not produced" }
+          Compress-Archive -Path $vst3.FullName -DestinationPath Theremin-vst3-windows.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Theremin-vst3-windows
+          path: Theremin-vst3-windows.zip
+          retention-days: 30
+
+      - name: Publish GitHub Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Theremin-vst3-windows.zip
+          generate_release_notes: true
