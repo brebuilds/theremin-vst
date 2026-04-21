@@ -23,7 +23,7 @@ jobs:
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
-          vcpkgGitCommitId: "2024.02.14"
+          vcpkgGitCommitId: "fba75d09065fcc76a25dcf386b1d00d33f5175af"
 
       - name: Install OpenCV via vcpkg
         shell: pwsh
