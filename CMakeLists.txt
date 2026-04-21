@@ -43,7 +43,13 @@ juce_add_plugin(Theremin
 target_sources(Theremin PRIVATE
     src/PluginProcessor.cpp
     src/PluginEditor.cpp
+    src/mapping/Calibration.cpp
+    src/mapping/Scales.cpp
+    src/mapping/GestureMapper.cpp
+    src/midi/MidiEmitter.cpp
 )
+
+target_include_directories(Theremin PRIVATE src)
 
 target_compile_definitions(Theremin PRIVATE
     JUCE_WEB_BROWSER=0

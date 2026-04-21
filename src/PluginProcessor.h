@@ -1,6 +1,8 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <atomic>
 #include "PluginState.h"
+#include "midi/MidiEmitter.h"
 
 class ThereminAudioProcessor : public juce::AudioProcessor
 {
@@ -32,6 +34,12 @@ public:
 
     juce::AudioProcessorValueTreeState apvts;
 
+    std::atomic<float> debugX { 0.5f };
+    std::atomic<float> debugY { 0.5f };
+    std::atomic<bool>  debugHandPresent { false };
+
 private:
+    theremin::MidiEmitter midiEmitter;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ThereminAudioProcessor)
 };
