@@ -13,6 +13,19 @@ endif()
 # JUCE as subdirectory (vendored submodule)
 add_subdirectory(vendor/JUCE)
 
+# Tests
+include(CTest)
+if(BUILD_TESTING)
+    include(FetchContent)
+    FetchContent_Declare(
+        Catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG v3.5.2
+    )
+    FetchContent_MakeAvailable(Catch2)
+    add_subdirectory(tests)
+endif()
+
 juce_add_plugin(Theremin
     COMPANY_NAME "Brebuilds"
     PLUGIN_MANUFACTURER_CODE Brbd
