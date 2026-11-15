@@ -1,5 +1,7 @@
 # theremin-vst
 
+[![Windows build](https://github.com/brebuilds/theremin-vst/actions/workflows/build.yml/badge.svg)](https://github.com/brebuilds/theremin-vst/actions/workflows/build.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A VST3 plugin that turns hand position into MIDI. Move your hand through the air,
 the plugin emits notes, pitch bend, volume and filter CC — routed to any synth on
 the next track in your DAW. It makes no sound of its own.
